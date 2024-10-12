@@ -9,11 +9,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MySql.Data.MySqlClient;
 
 namespace datitooo_c_
 {
     public partial class Form1 : Form
     {
+        string conexionSQL = "server=localhost;port=3306;database=dato;uid=root;Pwd=;";
         public Form1()
         {
             InitializeComponent();
@@ -24,6 +26,34 @@ namespace datitooo_c_
             //tbPhone.TextChanged += checkPhone;
             tbTelefono.Leave += checkPhone;
         }
+
+        void insertRegistro(string nombre, string apellido, int edad, float estatura, string genero, long telefono)
+        {
+            using (MySqlConnection conection = new MySqlConnection(conexionSQL))
+            {
+                conection.Open();
+
+                string insertQuery = "INSERT INTO tabla (nombre, apellido, edad, estatura, telefono, genero)" +
+                    "VALUES (@nombre, @apellido, @edad, @estatura, @telefono, @genero)";
+
+                using (MySqlCommand insertcommand = new MySqlCommand(insertQuery, conection))
+                {
+                    insertcommand.Parameters.AddWithValue("@nombre", nombre);
+                    insertcommand.Parameters.AddWithValue("@apellido", apellido);
+                    insertcommand.Parameters.AddWithValue("@edad", edad);
+                    insertcommand.Parameters.AddWithValue("@estatura", estatura);
+                    insertcommand.Parameters.AddWithValue("@telefono", telefono);
+                    insertcommand.Parameters.AddWithValue("@genero", genero);
+
+                    insertcommand.ExecuteNonQuery();
+                }
+                conection.Close();
+            }
+
+
+         }
+
+
         private bool isValidInt(string str)
         {
             int result;
@@ -97,11 +127,17 @@ namespace datitooo_c_
         }
         private void Guardar_Click(object sender, EventArgs e)
         {
-            string nombre = tbNombre.Text;
-            string apellido = tbApellido.Text;
-            string edad = tbEdad.Text;
-            string estatura = tbEstatura.Text;
-            string telefono = tbTelefono.Text;
+            string nombre, apellido;
+            int edad;
+            float estatura;
+            long telefono;
+            
+
+            nombre = tbNombre.Text;
+            apellido = tbApellido.Text;
+            edad = int.Parse (tbEdad.Text);
+            estatura = float.Parse (tbEstatura.Text);
+            telefono = long.Parse (tbTelefono.Text);
 
             string genero = "";
             if (rbHombre.Checked)
@@ -113,6 +149,8 @@ namespace datitooo_c_
             {
                 genero = "Mujer";
             }
+
+
 
             string datos = $"Nombre: {nombre} \r\nApellidos: {apellido} \r\nEdad: {edad} \r\nTelefono: {telefono}  \r\nEstatura: {estatura} \r\nGenero: {genero}";
             string rutaArchivos = "C:\\Users\\CHIOH\\Documents\\TXT.txt";
@@ -128,7 +166,10 @@ namespace datitooo_c_
                 }
                 writer.WriteLine(datos);
             }
+
+            insertRegistro(nombre, apellido, edad, estatura, genero, telefono);
             MessageBox.Show("Datos Guardados:\n\n" + datos, "informacion", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
         }
 
         private void Borrar_Click(object sender, EventArgs e)
